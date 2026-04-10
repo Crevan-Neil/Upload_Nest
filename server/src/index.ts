@@ -7,6 +7,8 @@ import helmet from "helmet";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import { HTTPSTATUS } from "./config/http.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
+import { logger } from "./utils/logger";
+import { connectDatabase, disconnectDatabase } from "./config/database.config";
 
 const app= express();
 const BASE_PATH=Env.BASE_PATH;
@@ -42,26 +44,28 @@ app.use(errorHandler);
 
 async function startServer(){
     try{
+        await connectDatabase();
         const server= app.listen(Env.PORT, ()=>{
-            console.log(`Server listening on port ${Env.PORT} in ${Env.NODE_ENV} mode`)
+            logger.info(`Server listening on port ${Env.PORT} in ${Env.NODE_ENV} mode`)
         })
         const shutdownSignals: NodeJS.Signals[]= ["SIGTERM", "SIGINT"];
         shutdownSignals.forEach((signal)=>{
             process.on(signal, async ()=>{
-                console.log(`${signal} recieved: shutting down gracefully`)
+                logger.info(`${signal} recieved: shutting down gracefully`)
                 try{
                     server.close(()=>{
-                        console.log(`HTTP server closed`);
+                        logger.info(`HTTP server closed`);
                     })
+                    await disconnectDatabase();
                     process.exit(0);
                 } catch(error){
-                    console.error("Error occured during shutting down", error);
+                    logger.error("Error occured during shutting down", error);
                     process.exit(1);
                 }
             })
         })
     } catch(error){
-        console.error("Failed to start server", error);
+        logger.error("Failed to start server", error);
         process.exit(1);
     }
 }
