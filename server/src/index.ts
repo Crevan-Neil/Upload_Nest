@@ -9,9 +9,12 @@ import { HTTPSTATUS } from "./config/http.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { logger } from "./utils/logger";
 import { connectDatabase, disconnectDatabase } from "./config/database.config";
+import internalRoutes from "./routes/internal";
+import passport from "passport";
+import publicRoutes from "./routes/public";
 
 const app= express();
-const BASE_PATH=Env.BASE_PATH;
+
 
 const allowedOrigins= Env.ALLOWED_ORIGINS.split(',');
 
@@ -31,6 +34,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(helmet());
+app.use(passport.initialize());
 
 app.get("/", asyncHandler(
     async(req: Request, res: Response)=>{
@@ -39,6 +43,9 @@ app.get("/", asyncHandler(
         })
     }
 ))
+
+app.use(`${Env.BASE_PATH}`, internalRoutes);
+app.use(publicRoutes);
 
 app.use(errorHandler);
 
@@ -51,10 +58,10 @@ async function startServer(){
         const shutdownSignals: NodeJS.Signals[]= ["SIGTERM", "SIGINT"];
         shutdownSignals.forEach((signal)=>{
             process.on(signal, async ()=>{
-                logger.info(`${signal} recieved: shutting down gracefully`)
+                logger.warn(`${signal} recieved: shutting down gracefully`)
                 try{
                     server.close(()=>{
-                        logger.info(`HTTP server closed`);
+                        logger.warn(`HTTP server closed`);
                     })
                     await disconnectDatabase();
                     process.exit(0);

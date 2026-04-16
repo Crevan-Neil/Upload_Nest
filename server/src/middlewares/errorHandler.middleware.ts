@@ -2,6 +2,20 @@ import { ErrorRequestHandler, Request, Response, NextFunction } from "express";
 import { HTTPSTATUS } from "../config/http.config";
 import { AppError } from "../utils/app-error";
 import { logger } from "../utils/logger";
+import { ZodError } from "zod";
+import { ErrorCodeEnum } from "../enums/error-code.enum";
+
+const formatZodError= (res: Response, error: ZodError)=>{
+    const errors= error?.issues?.map((err)=>({
+        field: err.path.join('.'),
+        message: err.message
+    }))
+    return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        message: "Validation failed",
+        error: errors,
+        errorCode: ErrorCodeEnum.VALIDATION_ERROR
+    })
+}
 
 
 export const errorHandler: ErrorRequestHandler= (
@@ -20,6 +34,9 @@ export const errorHandler: ErrorRequestHandler= (
         return res.status(HTTPSTATUS.BAD_REQUEST).json({
             message: "Invalid json format, please check your request body"
         })
+    }
+    if(error instanceof ZodError){
+        return formatZodError(res, error);
     }
     if(error instanceof AppError){
         return res.status(error.statusCode).json({
