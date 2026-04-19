@@ -13,7 +13,7 @@ const envConfig= ()=>({
     AWS_SECRET_KEY: getEnv('AWS_SECRET_KEY'),
     AWS_REGION: getEnv('AWS_REGION'),
     AWS_S3_BUCKET: getEnv('AWS_S3_BUCKET'),
-    ALLOWED_ORIGINS: getEnv("ALLOWED_ORIGINS", "https://upload-nest-chi.vercel.app"),
+    ALLOWED_ORIGINS: getEnv("ALLOWED_ORIGINS", "http://localhost:5173,https://upload-nest-chi.vercel.app"),
     LOGTAIL_SOURCE_TOKEN: getEnv("LOGTAIL_SOURCE_TOKEN"),
     LOGTAIL_INGESTING_HOST: getEnv("LOGTAIL_INGESTING_HOST")
 })

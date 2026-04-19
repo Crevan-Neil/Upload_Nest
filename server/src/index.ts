@@ -17,19 +17,18 @@ import { logTail } from "./config/logtail.config";
 const app= express();
 
 
-const allowedOrigins= Env.ALLOWED_ORIGINS.split(',');
+const allowedOrigins = Env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim().replace(/\/$/, ""));
 
-const corsOptions: CorsOptions ={
-    origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void){
-        if(!origin || allowedOrigins.includes(origin)){
+const corsOptions: CorsOptions = {
+    origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+        if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
             callback(null, true);
-        } else{
-            const errorMsg= `CORS error: Origin ${origin} is not allowed`;
-            callback(new UnauthorizedException(errorMsg), false);
+        } else {
+            logger.warn(`CORS block: Origin ${origin} is not in allowed list: ${Env.ALLOWED_ORIGINS}`);
+            callback(null, false);
         }
     },
     credentials: true
-
 }
 
 
