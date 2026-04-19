@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import { UploadSourceEnum } from "../models/file.model";
 import { HTTPSTATUS } from "../config/http.config";
-import { deleteFilesService, getAllFilesService, getFileUrlService, uploadFilesService } from "../services/file.service";
-import { deleteFilesSchema, fileIdSchema } from "../validators/file.validator";
+import { deleteFilesService, downloadFilesService, getAllFilesService, getFileUrlService, uploadFilesService } from "../services/file.service";
+import { deleteFilesSchema, downloadFileSchema, fileIdSchema, getAllFilesSchema } from "../validators/file.validator";
 
 
 export const uploadFilesViaWebController= asyncHandler(async(req: Request, res: Response)=>{
@@ -17,14 +17,29 @@ export const uploadFilesViaWebController= asyncHandler(async(req: Request, res: 
     })
 })
 
-export const getAllFilesConroller= asyncHandler(async(req:Request, res: Response)=>{
+export const uploadFilesViaAPIController= asyncHandler(async(req: Request, res: Response)=>{
     const userId= req.user?._id;
+    const files= req.files as Express.Multer.File[];
+    const uploadedVia= UploadSourceEnum.API;
+
+    const results= await uploadFilesService(userId, files, uploadedVia);
+    return res.status(HTTPSTATUS.OK).json({
+        results
+    })
+})
+
+export const getAllFilesController= asyncHandler(async(req:Request, res: Response)=>{
+    const userId= req.user?._id;
+    const query = getAllFilesSchema.parse(req.query);
+
+    const { keyword, pageSize, pageNumber } = query;
+
     const filter= {
-        keyword: req.query.keyword as string | undefined
+        keyword
     }
     const pagination= {
-        pageSize: parseInt(req.query.pageSize as string) || 20,
-        pageNumber: parseInt(req.query.pageNumber as string) || 1
+        pageSize,
+        pageNumber
     }
     const result= await getAllFilesService(userId, filter, pagination);
 
@@ -36,8 +51,16 @@ export const getAllFilesConroller= asyncHandler(async(req:Request, res: Response
 
 export const publicGetFileUrlController= asyncHandler(async(req: Request, res:Response)=>{
     const fileId= fileIdSchema.parse(req.params.fileId);
-    const { url }= await getFileUrlService(fileId);
-    return res.redirect(url);
+    const { url, stream, contentType, fileSize }= await getFileUrlService(fileId);
+    //return res.redirect(url);
+    res.set({
+        "Content-Type": contentType,
+        "Content-Length": fileSize,
+        "Cache-Control": 'public, max-age=3600',
+        "Content-Disposition": "inline",
+        "X-Content-Type-Options": "nosniff"
+    })
+    stream.pipe(res);
 })
 
 export const deleteFilesController= asyncHandler(async(req: Request, res: Response)=>{
@@ -50,4 +73,16 @@ export const deleteFilesController= asyncHandler(async(req: Request, res: Respon
         ...result
     })
 
+})
+
+
+export const downloadFilesController= asyncHandler(async(req: Request, res: Response)=>{
+    const userId= req.user?._id;
+    const data= downloadFileSchema.parse(req.body);
+    const result= await downloadFilesService(userId, data);
+    return res.status(HTTPSTATUS.OK).json({
+        message: "Files download URL successfully",
+        downloadedUrl: result?.url,
+        isZip: result?.isZip || false
+    })
 })

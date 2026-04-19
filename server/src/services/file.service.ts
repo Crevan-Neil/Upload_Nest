@@ -9,7 +9,11 @@ import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from "@aws-sd
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Env } from "../config/env.config";
 import { s3 } from "../config/aws-s3.config";
-import { DeleteFilesSchemaType } from "../validators/file.validator";
+import { DeleteFilesSchemaType, DownloadFilesSchemaType, GetAllFilesSchemaType } from "../validators/file.validator";
+import archiver from "archiver";
+import { PassThrough, Readable } from "node:stream";
+import { Upload } from "@aws-sdk/lib-storage";
+
 
 
 
@@ -93,14 +97,7 @@ async function deleteFromS3(storageKey: string){
     }
 }
 
-export const getAllFilesService=async(userId: string, filter: {
-        keyword?: string;
-    },
-    pagination:{
-        pageSize: number;
-        pageNumber: number;
-    }
-)=>{
+export const getAllFilesService=async(userId: string, filter: Pick<GetAllFilesSchemaType, "keyword">, pagination: Omit<GetAllFilesSchemaType, "keyword">)=>{
     const { keyword }= filter;
     const filterConditions: Record<string,any> ={
         userId
@@ -116,7 +113,7 @@ export const getAllFilesService=async(userId: string, filter: {
         ]
     }
     const { pageSize, pageNumber }= pagination;
-    const skip= (pageNumber-1)*pageSize;
+    const skip= (Math.max(1, pageNumber)-1)*pageSize;
 
     const [files, totalCount] = await Promise.all([
         fileModel.find(filterConditions)
@@ -176,14 +173,17 @@ async function getFileFromS3({ storageKey, expiresIn = 3600, filename, mimeType 
 export const getFileUrlService= async(fileId:string)=>{
     const file= await fileModel.findOne({ _id: fileId });
     if(!file) throw new NotFoundException('File not found');
-
-    const url= await getFileFromS3({
-        storageKey: file.storageKey,
-        mimeType: file.mimeType,
-        expiresIn: 3600
-    })
+    const stream = await getS3ReadStream(file.storageKey);
+    //const url= await getFileFromS3({
+        //storageKey: file.storageKey,
+        //mimeType: file.mimeType,
+        //expiresIn: 3600
+    //})
     return{
-        url
+        url:"",
+        stream,
+        contentType: file.mimeType,
+        fileSize: file.size
     }
 }
 
@@ -216,7 +216,94 @@ export const deleteFilesService = async (userId: string, data: DeleteFilesSchema
         logger.warn(`Failed to delete ${s3Errors.length} files from S3`);
     }
     return {
-        deletedCount
+        deletedCount,
+        failedCount: s3Errors.length
     };
+}
+
+export const downloadFilesService = async (userId: string, data: DownloadFilesSchemaType) => {
+    const { fileIds } = data;
+    const files = await fileModel.find({
+        _id: { $in: fileIds }
+    })
+    if(!files.length){
+        throw new NotFoundException("No files found");
+    }
+    if(files.length===1){
+        const signedUrl= await getFileFromS3({
+            storageKey: files[0].storageKey,
+            filename: files[0].originalName
+        })
+        return{
+            url: signedUrl,
+            isZip: false
+        }
+    }
+    const url = await handleMultipleFilesDownload(files,userId);
+    return{
+        url,
+        isZip: true
+    }
+}
+
+async function handleMultipleFilesDownload(files: Array<{storageKey: string; originalName: string}>,userId: string){
+    const timestamp= Date.now();
+    const zipKey= `temp-zips/${userId}/${timestamp}.zip`;
+
+    const zipFilename= `uploadnest-${timestamp}.zip`;
+
+    const zip= archiver('zip', { zlib: { level:6 }});
+
+    const passThrough= new PassThrough();
+    zip.on('error', (err)=>{
+        passThrough.destroy(err);
+    })
+
+    const upload= new Upload({
+        client: s3,
+        params:{
+            Bucket: Env.AWS_S3_BUCKET,
+            Key: zipKey,
+            Body: passThrough,
+            ContentType: 'application/zip'
+        }
+    })
+    zip.pipe(passThrough);
+
+    for(const file of files){
+        try{
+            const stream= await getS3ReadStream(file.storageKey);
+            zip.append(stream, { name: sanitizeFilename(file.originalName)})
+        } catch(error){
+            zip.destroy(error instanceof Error ? error : new Error(String(error)));
+            throw error
+        }
+    }
+    await zip.finalize();
+    await upload.done();
+    const url= await getFileFromS3({
+        storageKey: zipKey,
+        filename: zipFilename,
+        expiresIn: 3600
+    })
+    return url;
+}
+
+async function getS3ReadStream(storageKey: string){
+    try{
+        const command= new GetObjectCommand({
+            Bucket: Env.AWS_S3_BUCKET!,
+            Key: storageKey
+        })
+        const response= await s3.send(command);
+        if(!response.Body){
+            logger.warn(`No body returned for key: ${storageKey}`);
+            throw new InternalServerException(`No body returned for key`);
+        }
+        return response.Body as Readable;
+    } catch(error){
+        logger.error(`Error getting s3 stream for key: ${storageKey}`);
+        throw new InternalServerException(`Failed to retrieve file`);
+    }
 }
 
