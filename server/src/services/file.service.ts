@@ -1,3 +1,4 @@
+import "multer";
 import path from "node:path";
 import fileModel, { UploadSourceEnum } from "../models/file.model";
 import userModel from "../models/user.model";

@@ -1,3 +1,4 @@
+import "multer";
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import { UploadSourceEnum } from "../models/file.model";

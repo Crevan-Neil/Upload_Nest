@@ -1,3 +1,4 @@
+import "multer";
 import { Request } from "express";
 import multer from "multer";
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_FILES } from "../constant/multer";

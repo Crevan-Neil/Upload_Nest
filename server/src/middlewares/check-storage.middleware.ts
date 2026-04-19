@@ -1,3 +1,4 @@
+import "multer";
 import { NextFunction, Request, Response } from "express";
 import { BadRequestException, UnauthorizedException } from "../utils/app-error";
 import storageModel from "../models/storage.model";
