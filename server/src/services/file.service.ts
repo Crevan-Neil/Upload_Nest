@@ -256,7 +256,7 @@ async function handleMultipleFilesDownload(files: Array<{storageKey: string; ori
     const zip= archiver('zip', { zlib: { level:6 }});
 
     const passThrough= new PassThrough();
-    zip.on('error', (err)=>{
+    zip.on('error', (err: Error)=>{
         passThrough.destroy(err);
     })
 
