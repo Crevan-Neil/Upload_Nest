@@ -20,7 +20,7 @@ const app= express();
 const allowedOrigins= Env.ALLOWED_ORIGINS.split(',');
 
 const corsOptions: CorsOptions ={
-    origin(origin, callback){
+    origin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void){
         if(!origin || allowedOrigins.includes(origin)){
             callback(null, true);
         } else{

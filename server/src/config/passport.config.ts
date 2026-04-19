@@ -19,7 +19,7 @@ const options: StrategyOptions= {
     algorithms: ['HS256']
 }
 
-passport.use(new JwtStrategy(options, async(payload: JwtPayload, done)=>{
+passport.use(new JwtStrategy(options, async(payload: JwtPayload, done: (err: any, user?: Express.User | false, info?: any) => void)=>{
     try{
         if(!payload.userId){
             logger.error("Authentication failed: Payload missing userId", payload);
@@ -37,8 +37,8 @@ passport.use(new JwtStrategy(options, async(payload: JwtPayload, done)=>{
     }
 }))
 
-passport.serializeUser((user: any, done)=> done(null, user));
-passport.deserializeUser((user:any, done)=> done(null, user));
+passport.serializeUser((user: any, done: (err: any, id?: any) => void)=> done(null, user));
+passport.deserializeUser((user:any, done: (err: any, user?: any) => void)=> done(null, user));
 
 export const passportAuthenticateJwt= passport.authenticate("jwt",{
     session: false

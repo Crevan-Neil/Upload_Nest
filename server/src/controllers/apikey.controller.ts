@@ -5,7 +5,7 @@ import { createApiKeySchema, deleteApiKeySchema } from "../validators/apikey.val
 import { createApiKeyService, deleteApiKeyService, getAllApiKeysService } from "../services/apikey.service";
 
 export const createApiKeyController= asyncHandler(async(req: Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const { name }= createApiKeySchema.parse(req.body);
     const { rawKey }=await createApiKeyService(userId, name);
 
@@ -16,7 +16,7 @@ export const createApiKeyController= asyncHandler(async(req: Request, res: Respo
 })
 
 export const getAllApiKeysController= asyncHandler(async(req: Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
 
     const pagination= {
         pageSize: parseInt(req.query.pageSize as string) || 10,
@@ -31,7 +31,7 @@ export const getAllApiKeysController= asyncHandler(async(req: Request, res: Resp
 })
 
 export const deleteApiKeyController= asyncHandler(async(req:Request, res:Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const { id }= deleteApiKeySchema.parse(req.params);
     const result= await deleteApiKeyService(userId, id);
     return res.status(HTTPSTATUS.OK).json({

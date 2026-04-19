@@ -8,7 +8,7 @@ import { deleteFilesSchema, downloadFileSchema, fileIdSchema, getAllFilesSchema 
 
 
 export const uploadFilesViaWebController= asyncHandler(async(req: Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const files= req.files as Express.Multer.File[];
     const uploadedVia= UploadSourceEnum.WEB;
 
@@ -20,7 +20,7 @@ export const uploadFilesViaWebController= asyncHandler(async(req: Request, res: 
 
 
 export const uploadFilesViaAPIController= asyncHandler(async(req: Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const files= req.files as Express.Multer.File[];
     const uploadedVia= UploadSourceEnum.API;
 
@@ -32,7 +32,7 @@ export const uploadFilesViaAPIController= asyncHandler(async(req: Request, res: 
 
 
 export const getAllFilesController= asyncHandler(async(req:Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const query = getAllFilesSchema.parse(req.query);
 
     const { keyword, pageSize, pageNumber } = query;
@@ -67,7 +67,7 @@ export const publicGetFileUrlController= asyncHandler(async(req: Request, res:Re
 })
 
 export const deleteFilesController= asyncHandler(async(req: Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const data = deleteFilesSchema.parse(req.body);
     const result = await deleteFilesService(userId, data);
 
@@ -80,7 +80,7 @@ export const deleteFilesController= asyncHandler(async(req: Request, res: Respon
 
 
 export const downloadFilesController= asyncHandler(async(req: Request, res: Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
     const data= downloadFileSchema.parse(req.body);
     const result= await downloadFilesService(userId, data);
     return res.status(HTTPSTATUS.OK).json({

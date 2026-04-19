@@ -5,7 +5,7 @@ import { getUserAnalyticsWithChartService } from "../services/analytics.service"
 
 
 export const getUserAnalyticsWithChartController= asyncHandler(async(req:Request, res:Response)=>{
-    const userId= req.user?._id;
+    const userId= req.user?._id?.toString() as string;
 
     const { from, to }= req.query;
 

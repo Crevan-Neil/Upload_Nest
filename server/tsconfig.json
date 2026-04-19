@@ -11,8 +11,8 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": ["es6", "dom", "es2022"],
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*.ts", "src/types/*.ts"],
+  "include": ["src/**/*.ts", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }
