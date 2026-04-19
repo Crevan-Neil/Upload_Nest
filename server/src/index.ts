@@ -26,9 +26,11 @@ const corsOptions: CorsOptions ={
             const errorMsg= `CORS error: Origin ${origin} is not allowed`;
             callback(new UnauthorizedException(errorMsg), false);
         }
-    }
+    },
+    credentials: true
 
 }
+
 
 app.use(cors(corsOptions));
 app.use(express.json());

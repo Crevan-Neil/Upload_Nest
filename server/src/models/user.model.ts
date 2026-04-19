@@ -51,11 +51,15 @@ userSchema.methods.comparePassword= async function(value:string){
     return compareValue(value, this.password);
 }
 
-userSchema.methods.omitPassword= function(): Omit<UserDocument, "password">{
+userSchema.methods.omitPassword= function(){
     const userObj= this.toObject();
+    if(userObj._id){
+        userObj.id= userObj._id.toString();
+    }
     delete userObj.password;
     return userObj;
 }
+
 
 const userModel= mongoose.model<UserDocument>("user", userSchema);
 

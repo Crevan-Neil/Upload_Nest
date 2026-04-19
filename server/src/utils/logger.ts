@@ -1,9 +1,15 @@
 import winston, { verbose } from "winston";
 import { Env } from "../config/env.config";
+import { LogtailTransport } from "@logtail/winston";
+import { logTail } from "../config/logtail.config";
 
 const {combine, colorize, timestamp, errors, json, printf }= winston.format;
 
 const transports: winston.transport[]= [];
+
+if(Env.NODE_ENV==="production"){
+    transports.push(new LogtailTransport(logTail));
+}
 
 if(Env.NODE_ENV!=="production"){
     transports.push(

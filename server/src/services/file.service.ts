@@ -139,7 +139,8 @@ export const getAllFilesService=async(userId: string, filter: Pick<GetAllFilesSc
     );
     const totalPages= Math.ceil(totalCount/pageSize);
     return{
-        file: filesWithUrls,
+        files: filesWithUrls,
+
         pagination:{
             pageSize,
             pageNumber,

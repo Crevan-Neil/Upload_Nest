@@ -13,9 +13,10 @@ export const uploadFilesViaWebController= asyncHandler(async(req: Request, res: 
 
     const results= await uploadFilesService(userId, files, uploadedVia);
     return res.status(HTTPSTATUS.OK).json({
-        results
+        ...results
     })
 })
+
 
 export const uploadFilesViaAPIController= asyncHandler(async(req: Request, res: Response)=>{
     const userId= req.user?._id;
@@ -24,9 +25,10 @@ export const uploadFilesViaAPIController= asyncHandler(async(req: Request, res: 
 
     const results= await uploadFilesService(userId, files, uploadedVia);
     return res.status(HTTPSTATUS.OK).json({
-        results
+        ...results
     })
 })
+
 
 export const getAllFilesController= asyncHandler(async(req:Request, res: Response)=>{
     const userId= req.user?._id;
@@ -82,7 +84,7 @@ export const downloadFilesController= asyncHandler(async(req: Request, res: Resp
     const result= await downloadFilesService(userId, data);
     return res.status(HTTPSTATUS.OK).json({
         message: "Files download URL successfully",
-        downloadedUrl: result?.url,
+        downloadUrl: result?.url,
         isZip: result?.isZip || false
     })
-})
+})

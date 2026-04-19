@@ -4,6 +4,7 @@ import { LoginSchemaType, RegisterSchemaType } from "../validators/auth.validato
 import userModel from "../models/user.model";
 import { NotFoundException, UnauthorizedException } from "../utils/app-error";
 import storageModel from "../models/storage.model";
+import reportSettingModel from "../models/report.model";
 import { logger } from "../utils/logger";
 import { signJwtToken } from "../utils/jwt";
 
@@ -26,6 +27,10 @@ export const registerService=async(body:RegisterSchemaType)=>{
                 userId: newUser._id
             })
             await storage.save({session});
+            const reportSetting= new reportSettingModel({
+                userId: newUser._id
+            })
+            await reportSetting.save({session});
             return {user: newUser.omitPassword()};
         })
     } catch(error){
@@ -45,9 +50,11 @@ export const loginService=async(body: LoginSchemaType)=>{
     const { token, expiresAt}= signJwtToken({
         userId: user.id
     })
+    const reportSetting= await reportSettingModel.findOne({userId: user._id});
     return{
         user: user.omitPassword(),
         accessToken: token,
-        expiresAt
+        expiresAt,
+        reportSetting: reportSetting || null
     }
 }

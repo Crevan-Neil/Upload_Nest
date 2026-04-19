@@ -13,7 +13,9 @@ const envConfig= ()=>({
     AWS_SECRET_KEY: getEnv('AWS_SECRET_KEY'),
     AWS_REGION: getEnv('AWS_REGION'),
     AWS_S3_BUCKET: getEnv('AWS_S3_BUCKET'),
-    ALLOWED_ORIGINS: getEnv("ALLOWED_ORIGINS")
+    ALLOWED_ORIGINS: getEnv("ALLOWED_ORIGINS"),
+    LOGTAIL_SOURCE_TOKEN: getEnv("LOGTAIL_SOURCE_TOKEN"),
+    LOGTAIL_INGESTING_HOST: getEnv("LOGTAIL_INGESTING_HOST")
 })
 
 export const Env= envConfig();

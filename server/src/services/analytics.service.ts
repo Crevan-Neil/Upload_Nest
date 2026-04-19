@@ -59,7 +59,8 @@ export const getUserAnalyticsWithChartService=async(userId: string, filter:{
                     {
                         $group: {
                             _id: null,
-                            totalUploadedFilesForPeriod: { $sum: "$uploadedFiles" },
+                            totaluploadFilesForPeriod: { $sum: "$uploadedFiles" },
+
                             totalUsageForPeriod: { $sum: "$usages" },
                         }
                     }
@@ -70,10 +71,12 @@ export const getUserAnalyticsWithChartService=async(userId: string, filter:{
             $project: {
                 _id: 0,
                 chartData: 1,
-                totalUploadedFilesForPeriod: {
+                totaluploadFilesForPeriod: {
+
                     $ifNull: [
                         {
-                            $arrayElemAt: ["$totals.totalUploadedFilesForPeriod", 0],
+                            $arrayElemAt: ["$totals.totaluploadFilesForPeriod", 0],
+
                         },
                         0,
                     ],
@@ -94,7 +97,8 @@ export const getUserAnalyticsWithChartService=async(userId: string, filter:{
     const [
         {
             chartData= [],
-            totalUploadedFilesForPeriod=0,
+            totaluploadFilesForPeriod=0,
+
             totalUsageForPeriod=0
         }= {}
     ] = result;
@@ -112,7 +116,8 @@ export const getUserAnalyticsWithChartService=async(userId: string, filter:{
 
     return{
         chart: formattedChartData,
-        totalUploadedFilesForPeriod,
+        totaluploadFilesForPeriod,
+
         totalUsageForPeriod: formatBytes(totalUsageForPeriod),
         storageUsageSummary: {
             totalUsage: storageMetrics.usage,
