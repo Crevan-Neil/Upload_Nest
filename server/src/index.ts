@@ -12,6 +12,7 @@ import { connectDatabase, disconnectDatabase } from "./config/database.config";
 import internalRoutes from "./routes/internal";
 import passport from "passport";
 import publicRoutes from "./routes/public";
+import { logTail } from "./config/logtail.config";
 
 const app= express();
 
@@ -66,6 +67,7 @@ async function startServer(){
                         logger.warn(`HTTP server closed`);
                     })
                     await disconnectDatabase();
+                    await logTail.flush();
                     process.exit(0);
                 } catch(error){
                     logger.error("Error occured during shutting down", error);
